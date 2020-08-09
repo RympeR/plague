@@ -16,6 +16,7 @@ public class character_controller : MonoBehaviour
     Light light_;
     Rigidbody2D rb;
     float run;
+    float hp_run=5f;
     bool jump = true;
     bool whenlook;
     int current_torch_amount;
@@ -42,7 +43,8 @@ public class character_controller : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        run = joystick.Horizontal * 5f;
+ 
+        run = joystick.Horizontal * hp_run;
 
         if (joystick.Vertical >= .5f & jump)
         {
@@ -112,6 +114,9 @@ public class character_controller : MonoBehaviour
     }
     void increaseHealth()
     {
+        
+        hp_run = 5 * hp / 100;
+        Debug.Log(run);
         light_.range = 49 - (100 / hp) * 9;
         if (hp <= 20)
         {
@@ -122,6 +127,8 @@ public class character_controller : MonoBehaviour
     }
     void decreaseHealth()
     {
+        hp_run = 5 * hp / 100;
+        Debug.Log(run);
         light_.range = 46 - (100 / hp) * 6;
         if (hp <= 20)
         {
