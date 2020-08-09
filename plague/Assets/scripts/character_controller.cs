@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,26 +13,31 @@ public class character_controller : MonoBehaviour
     //OnCollisionStay
     //OnTriggerStay
     public Joystick joystick;
+    Light light_;
     Rigidbody2D rb;
     float run;
     bool jump = true;
     bool whenlook;
     int current_torch_amount;
-    float plague_percentage;
+    float plague_percentage = 0.0f;
     float hp;
     bool near_fire;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        hp = 100f * (1 - plague_percentage);
+       
+       InvokeRepeating("changeHealth", 0f, 0.2f);
+
+        light_ = GetComponent<Light>();
         rb = GetComponent<Rigidbody2D>();
         Debug.Log(torch.IncreaseTorchAmount());
     }
 
     void Update()
     {
-
+    
     }
     // Update is called once per frame
     void FixedUpdate()
@@ -63,40 +69,64 @@ public class character_controller : MonoBehaviour
 
     void OnTriggerExit2D(Collider2D obj)
     {
-        if (obj.tag == "torch" || obj.tag == "fire")
+        //obj.tag == "torch" ||
+        if ( obj.tag == "fire")
         {
-            InvokeRepeating("decreaseHealth", 0f, 0.5f);
-
-            current_torch_amount = torch.IncreaseTorchAmount();
+            near_fire = false;
+            //current_torch_amount = torch.IncreaseTorchAmount();
             run = torch.CalculateSpeedSlow(run);
         }
     }
     void OnTriggerEnter2D(Collider2D obj)
     {
-        if(obj.tag == "torch")
+        if (obj.tag == "torch")
         {
             current_torch_amount = torch.IncreaseTorchAmount();
             run = torch.CalculateSpeedSlow(run);
             Destroy(obj.gameObject);
         }
+        if (obj.tag == "fire")
+        {
+            near_fire = true;
+            
+        }
     }
     void OnTriggerStay2D(Collider2D obj)
     {
-        if (obj.tag == "torch" || obj.tag == "fire")
+        if (obj.tag == "fire")
+        {         
+            //current_torch_amount = torch.IncreaseTorchAmount();
+            //run = torch.CalculateSpeedSlow(run);
+        }
+    }
+    void changeHealth()
+    {
+        if (!near_fire)
         {
-            InvokeRepeating("increaseHealth", 0f, 0.5f);
-            
-            current_torch_amount = torch.IncreaseTorchAmount();
-            run = torch.CalculateSpeedSlow(run);
+            decreaseHealth();
+        }
+        else
+        {
+            increaseHealth();
         }
     }
     void increaseHealth()
     {
+        light_.range = 49 - (100 / hp) * 9;
+        if (hp <= 20)
+        {
+            light_.range = 6;
+        }
         hp++;
         Debug.Log(hp);
     }
     void decreaseHealth()
     {
+        light_.range = 46 - (100 / hp) * 6;
+        if (hp <= 20)
+        {
+            light_.range = 6;
+        }
         if (hp == 0)
         {
             Invoke("die", 2f);
