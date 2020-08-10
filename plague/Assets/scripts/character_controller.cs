@@ -40,7 +40,6 @@ public class character_controller : MonoBehaviour
 
         light_ = GetComponent<Light>();
         rb = GetComponent<Rigidbody2D>();
-        Debug.Log(torch.IncreaseTorchAmount());
     }
 
     void Update()
@@ -75,6 +74,43 @@ public class character_controller : MonoBehaviour
             jump = true;
         }
     }
+    
+    void OnTriggerEnter2D(Collider2D obj)
+    {
+        if (obj.tag == "torch")
+        {
+            current_torch_amount = torch.IncreaseTorchAmount();
+            run = torch.CalculateSpeedSlow(run);
+            Destroy(obj.gameObject);
+        }
+        if (obj.tag == "fire")
+        {
+            near_fire = true;
+        }
+        if (obj.tag == "Finish")
+        {
+            LevelController.instance.YouWin();
+        }
+    }
+    void OnTriggerStay2D(Collider2D obj)
+    {
+        if (obj.tag == "fire")
+        {
+            light_on_torch();
+            torch_lighted = true;
+        }
+    }
+    void OnTriggerExit2D(Collider2D obj)
+    {
+        //obj.tag == "torch" ||
+        if (obj.tag == "fire")
+        {
+            near_fire = false;
+            //current_torch_amount = torch.IncreaseTorchAmount();
+            run = torch.CalculateSpeedSlow(run);
+            Invoke("torch_controller", 5f);
+        }
+    }
     void torch_controller()
     {
         if (torch_lighted)
@@ -86,105 +122,77 @@ public class character_controller : MonoBehaviour
             light_on_torch();
         }
     }
-        void light_on_torch()
-        {
-            torch_with_light.GetComponent<SpriteRenderer>().enabled = true;
-            torch_no_light.GetComponent<SpriteRenderer>().enabled = false;
-        }
+    void light_on_torch()
+    {
+        torch_with_light.GetComponent<SpriteRenderer>().enabled = true;
+        torch_no_light.GetComponent<SpriteRenderer>().enabled = false;
+    }
 
-        void get_torch_off()
-        {
-            torch_with_light.GetComponent<SpriteRenderer>().enabled = false;
-            torch_no_light.GetComponent<SpriteRenderer>().enabled = true;
+    void get_torch_off()
+    {
+        torch_with_light.GetComponent<SpriteRenderer>().enabled = false;
+        torch_no_light.GetComponent<SpriteRenderer>().enabled = true;
 
-        }
-        void OnTriggerExit2D(Collider2D obj)
+    }
+    
+    void changeHealth()
+    {
+        if (torch_with_light.GetComponent<SpriteRenderer>().enabled)
         {
-            //obj.tag == "torch" ||
-            if (obj.tag == "fire")
-            {
-                near_fire = false;
-                //current_torch_amount = torch.IncreaseTorchAmount();
-                run = torch.CalculateSpeedSlow(run);
-                Invoke("torch_controller", 5f);
-            }
+            near_fire = true;
         }
-        void OnTriggerEnter2D(Collider2D obj)
+        else
         {
-            if (obj.tag == "torch")
-            {
-                current_torch_amount = torch.IncreaseTorchAmount();
-                run = torch.CalculateSpeedSlow(run);
-                Destroy(obj.gameObject);
-            }
-            if (obj.tag == "fire")
-            {
-                near_fire = true;
+            near_fire = false;
+        }
+        if (!near_fire)
+            decreaseHealth();
+        else
+            increaseHealth();
+    }
+    void increaseHealth()
+    {
 
-            }
-            if (obj.tag == "Finish")
-            {
-            LevelController.instance.YouWin();
-            }
-        }
-        void OnTriggerStay2D(Collider2D obj)
+        hp_run = 5 * hp / 100;
+        Debug.Log(run);
+        light_.range = 49 - (100 / hp) * 9;
+        if (hp <= 20) light_.range = 6;
+        if (hp<100) hp++;
+        Debug.Log(hp);
+    }
+    void decreaseHealth()
+    {
+        hp_run = 5 * hp / 100;
+        Debug.Log(run);
+        light_.range = 46 - (100 / hp) * 6;
+        if (hp <= 20)
         {
-            if (obj.tag == "fire")
-            {
-                light_on_torch();
-                torch_lighted = true;
-            }
+            light_.range = 6;
         }
-        void changeHealth()
+        if (hp == 0)
         {
-            if (!near_fire)
-                decreaseHealth();
-            else
-                increaseHealth();
+            Invoke("die", 2f);
         }
-        void increaseHealth()
-        {
+        hp--;
+        Debug.Log(hp);
+    }
+    void die()
+    {
+        LevelController.instance.youLose();
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+    void Flip()
+    {
+        if (joystick.Horizontal > .2f) whenlook = true;
+        if (joystick.Horizontal < -.2f) whenlook = false;
 
-            hp_run = 5 * hp / 100;
-            Debug.Log(run);
-            light_.range = 49 - (100 / hp) * 9;
-            if (hp <= 20) light_.range = 6;
-            if (hp<100) hp++;
-            Debug.Log(hp);
-        }
-        void decreaseHealth()
+        if (!whenlook)
         {
-            hp_run = 5 * hp / 100;
-            Debug.Log(run);
-            light_.range = 46 - (100 / hp) * 6;
-            if (hp <= 20)
-            {
-                light_.range = 6;
-            }
-            if (hp == 0)
-            {
-                Invoke("die", 2f);
-            }
-            hp--;
-            Debug.Log(hp);
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
         }
-        void die()
+        else
         {
-            LevelController.instance.youLose();
-            //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
-        void Flip()
-        {
-            if (joystick.Horizontal > .2f) whenlook = true;
-            if (joystick.Horizontal < -.2f) whenlook = false;
-
-            if (!whenlook)
-            {
-                transform.localRotation = Quaternion.Euler(0, 0, 0);
-            }
-            else
-            {
-                transform.localRotation = Quaternion.Euler(0, 180, 0);
-            }
+            transform.localRotation = Quaternion.Euler(0, 180, 0);
         }
     }
+}
