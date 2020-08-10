@@ -122,6 +122,10 @@ public class character_controller : MonoBehaviour
                 near_fire = true;
 
             }
+            if (obj.tag == "Finish")
+            {
+            LevelController.instance.YouWin();
+            }
         }
         void OnTriggerStay2D(Collider2D obj)
         {
@@ -166,7 +170,8 @@ public class character_controller : MonoBehaviour
         }
         void die()
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            LevelController.instance.youLose();
+            //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
         void Flip()
         {
